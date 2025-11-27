@@ -5,8 +5,9 @@ import { LearningCard } from "@/components/LearningCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Edit, Trash2, BookOpen } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, BookOpen, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Question {
   id: number;
@@ -86,6 +87,12 @@ const Teacher = () => {
     toast.success("Soal berhasil dihapus!");
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Berhasil logout!");
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/30 via-background to-primary/10 py-8">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -100,14 +107,25 @@ const Teacher = () => {
             Kembali
           </Button>
 
-          <Button
-            onClick={() => navigate("/admin")}
-            variant="outline"
-            size="lg"
-            className="rounded-2xl border-2 text-xl font-bold"
-          >
-            Ke Admin Panel
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              onClick={() => navigate("/admin")}
+              variant="outline"
+              size="lg"
+              className="rounded-2xl border-2 text-xl font-bold"
+            >
+              Ke Admin Panel
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="lg"
+              className="rounded-2xl border-2 text-xl font-bold text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <LogOut className="mr-2 w-6 h-6" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         <div className="text-center mb-12">

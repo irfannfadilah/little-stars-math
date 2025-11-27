@@ -1,10 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LearningCard } from "@/components/LearningCard";
-import { ArrowLeft, Users, BookOpen, BarChart3, Settings } from "lucide-react";
+import { ArrowLeft, Users, BookOpen, BarChart3, Settings, LogOut } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Admin = () => {
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Berhasil logout!");
+    navigate("/login");
+  };
 
   const stats = [
     { label: "Total Guru", value: "5", icon: Users, color: "bg-primary" },
@@ -23,15 +31,27 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 via-background to-secondary/10 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
-        <Button
-          onClick={() => navigate("/")}
-          variant="outline"
-          size="lg"
-          className="mb-8 rounded-2xl border-2 text-xl font-bold"
-        >
-          <ArrowLeft className="mr-2 w-6 h-6" />
-          Kembali
-        </Button>
+        <div className="flex justify-between items-center mb-8">
+          <Button
+            onClick={() => navigate("/")}
+            variant="outline"
+            size="lg"
+            className="rounded-2xl border-2 text-xl font-bold"
+          >
+            <ArrowLeft className="mr-2 w-6 h-6" />
+            Kembali
+          </Button>
+
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            size="lg"
+            className="rounded-2xl border-2 text-xl font-bold text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <LogOut className="mr-2 w-6 h-6" />
+            Logout
+          </Button>
+        </div>
 
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-7xl font-black mb-4 text-hero">
