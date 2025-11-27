@@ -51,13 +51,13 @@ const Home = () => {
           </Button>
 
           <Button
-            onClick={() => navigate("/teacher")}
+            onClick={() => navigate("/login")}
             size="lg"
             variant="outline"
             className="w-full h-20 text-3xl font-black rounded-3xl border-4 hover:scale-105 transition-all duration-300 shadow-[var(--shadow-soft)] bg-card"
           >
             <GraduationCap className="mr-4 w-10 h-10" />
-            Masuk Sebagai Guru
+            🔐 Login Guru/Admin
           </Button>
         </div>
 
