@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LearningCard } from "@/components/LearningCard";
 import { useToast } from "@/hooks/use-toast";
 import { LogIn } from "lucide-react";
+import { login, setAuthToken, getCurrentUser } from "@/lib/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,36 +17,26 @@ const Login = () => {
 
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        checkUserRoleAndRedirect(session.user.id);
-      }
-    });
+    checkExistingSession();
   }, []);
 
-  const checkUserRoleAndRedirect = async (userId: string) => {
+  const checkExistingSession = async () => {
     try {
-      const { data: roles, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-
-      if (error) throw error;
-
-      if (roles && roles.length > 0) {
-        const role = roles[0].role;
-        if (role === "admin") {
-          navigate("/admin");
-        } else if (role === "guru") {
-          navigate("/teacher");
-        } else {
-          navigate("/");
-        }
-      } else {
-        navigate("/");
+      const user = await getCurrentUser();
+      if (user) {
+        redirectBasedOnRole(user.role);
       }
     } catch (error) {
-      console.error("Error checking role:", error);
+      // No valid session, stay on login page
+    }
+  };
+
+  const redirectBasedOnRole = (role: string) => {
+    if (role === "admin") {
+      navigate("/admin");
+    } else if (role === "guru") {
+      navigate("/teacher");
+    } else {
       navigate("/");
     }
   };
@@ -56,20 +46,17 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await login(email, password);
+      
+      // Simpan token
+      setAuthToken(response.token);
+
+      toast({
+        title: "Login berhasil!",
+        description: "Selamat datang kembali 🎉",
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        toast({
-          title: "Login berhasil!",
-          description: "Selamat datang kembali 🎉",
-        });
-        await checkUserRoleAndRedirect(data.user.id);
-      }
+      redirectBasedOnRole(response.user.role);
     } catch (error: any) {
       toast({
         title: "Login gagal",
