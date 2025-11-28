@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Edit, Trash2, BookOpen, LogOut } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { logout } from "@/lib/api";
 
 interface Question {
   id: number;
@@ -88,9 +88,13 @@ const Teacher = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Berhasil logout!");
-    navigate("/login");
+    try {
+      await logout();
+      toast.success("Berhasil logout!");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Gagal logout");
+    }
   };
 
   return (
