@@ -36,9 +36,6 @@ const Numbers = () => {
           <h1 className="text-5xl md:text-7xl font-black mb-4 text-primary">
             Mengenal Angka 1-10 🔢
           </h1>
-          <p className="text-2xl text-foreground/70 font-bold">
-            Klik setiap angka untuk melihat jumlahnya!
-          </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
@@ -53,7 +50,7 @@ const Numbers = () => {
             size="lg"
             className="text-2xl h-16 px-12 rounded-3xl font-black bg-gradient-to-r from-secondary to-accent hover:scale-105 transition-all"
           >
-            Lanjut ke Bangun Datar 🎨
+            Lanjut ke Bangun Datar
           </Button>
         </div>
       </div>

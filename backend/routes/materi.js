@@ -3,8 +3,8 @@ const router = express.Router();
 const db = require('../config/db');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
-// GET all materi
-router.get('/', authenticateToken, async (req, res) => {
+// GET all materi (PUBLIC - tidak perlu login)
+router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT m.*, u.nama as nama_guru 
@@ -19,8 +19,8 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// GET single materi
-router.get('/:id', authenticateToken, async (req, res) => {
+// GET single materi (PUBLIC - tidak perlu login)
+router.get('/:id', async (req, res) => {
   try {
     const [rows] = await db.query(
       'SELECT m.*, u.nama as nama_guru FROM materi m LEFT JOIN users u ON m.id_guru = u.id WHERE m.id = ?',

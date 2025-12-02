@@ -53,7 +53,7 @@ const Login = () => {
 
       toast({
         title: "Login berhasil!",
-        description: "Selamat datang kembali 🎉",
+        description: "Selamat datang kembali",
       });
 
       redirectBasedOnRole(response.user.role);
@@ -76,7 +76,7 @@ const Login = () => {
             <LogIn className="w-10 h-10 text-primary" />
           </div>
           <h1 className="text-4xl font-black text-hero mb-2">
-            Masuk 🔐
+            Masuk
           </h1>
           <p className="text-lg text-foreground/70 font-bold">
             Login untuk melanjutkan

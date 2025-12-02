@@ -3,8 +3,8 @@ const router = express.Router();
 const db = require('../config/db');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
-// GET all latihan
-router.get('/', authenticateToken, async (req, res) => {
+// GET all latihan (PUBLIC - tidak perlu login)
+router.get('/', async (req, res) => {
   try {
     const { tingkat_kesulitan } = req.query;
     
@@ -30,8 +30,8 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// GET single latihan
-router.get('/:id', authenticateToken, async (req, res) => {
+// GET single latihan (PUBLIC - tidak perlu login)
+router.get('/:id', async (req, res) => {
   try {
     const [rows] = await db.query(
       'SELECT l.*, u.nama as nama_guru FROM latihan l LEFT JOIN users u ON l.id_guru = u.id WHERE l.id = ?',

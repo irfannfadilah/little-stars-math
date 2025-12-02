@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser, getAuthToken } from "@/lib/api";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,22 +18,22 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
 
   const checkAuth = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = getAuthToken();
       
-      if (!session) {
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const user = await getCurrentUser();
+      
+      if (!user) {
         navigate("/login");
         return;
       }
 
       if (allowedRoles && allowedRoles.length > 0) {
-        const { data: roles, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id);
-
-        if (error) throw error;
-
-        const hasRole = roles?.some(r => allowedRoles.includes(r.role));
+        const hasRole = allowedRoles.includes(user.role);
         
         if (!hasRole) {
           navigate("/");

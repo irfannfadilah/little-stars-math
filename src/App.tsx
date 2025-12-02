@@ -9,8 +9,11 @@ import Shapes from "./pages/Shapes";
 import Levels from "./pages/Levels";
 import Practice from "./pages/Practice";
 import Teacher from "./pages/Teacher";
+import Materi from "./pages/Materi";
+import StudentMateri from "./pages/StudentMateri";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -25,15 +28,25 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/numbers" element={<Numbers />} />
           <Route path="/shapes" element={<Shapes />} />
           <Route path="/levels" element={<Levels />} />
           <Route path="/practice/:level" element={<Practice />} />
+          <Route path="/materi-siswa" element={<StudentMateri />} />
           <Route 
             path="/teacher" 
             element={
               <ProtectedRoute allowedRoles={["guru", "admin"]}>
                 <Teacher />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/materi" 
+            element={
+              <ProtectedRoute allowedRoles={["guru", "admin"]}>
+                <Materi />
               </ProtectedRoute>
             } 
           />

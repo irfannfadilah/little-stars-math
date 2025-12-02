@@ -15,11 +15,13 @@ const authRoutes = require('./routes/auth');
 const materiRoutes = require('./routes/materi');
 const latihanRoutes = require('./routes/latihan');
 const aktivitasRoutes = require('./routes/aktivitas');
+const usersRoutes = require('./routes/users');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/materi', materiRoutes);
 app.use('/api/latihan', latihanRoutes);
 app.use('/api/aktivitas', aktivitasRoutes);
+app.use('/api/users', usersRoutes);
 
 // Health check
 app.get('/', (req, res) => {

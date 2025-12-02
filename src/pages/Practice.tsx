@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LearningCard } from "@/components/LearningCard";
 import { ArrowLeft, CheckCircle, XCircle } from "lucide-react";
 import oceanImage from "@/assets/ocean-animals.jpg";
 import { toast } from "sonner";
+import { getAllLatihan } from "@/lib/api";
+
+interface Question {
+  id: number;
+  judul: string;
+  pertanyaan: string;
+  jawaban_benar: number;
+  tingkat_kesulitan: string;
+}
 
 const Practice = () => {
   const navigate = useNavigate();
@@ -12,38 +21,65 @@ const Practice = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const questions = {
-    easy: [
-      { question: "3 + 2 = ?", answer: 5, options: [4, 5, 6, 7] },
-      { question: "5 - 1 = ?", answer: 4, options: [3, 4, 5, 6] },
-      { question: "2 + 1 = ?", answer: 3, options: [2, 3, 4, 5] },
-    ],
-    medium: [
-      { question: "6 + 3 = ?", answer: 9, options: [7, 8, 9, 10] },
-      { question: "8 - 2 = ?", answer: 6, options: [5, 6, 7, 8] },
-      { question: "Di laut ada 5 ikan, datang 3 ikan lagi. Berapa ikan sekarang?", answer: 8, options: [6, 7, 8, 9] },
-    ],
-    hard: [
-      { question: "9 + 5 = ?", answer: 14, options: [12, 13, 14, 15] },
-      { question: "12 - 4 = ?", answer: 8, options: [7, 8, 9, 10] },
-      { question: "Ada 7 bintang laut di pantai. 4 bintang laut pergi. Berapa yang tersisa?", answer: 3, options: [2, 3, 4, 5] },
-    ],
+  // Fetch latihan dari API berdasarkan level
+  useEffect(() => {
+    fetchQuestions();
+  }, [level]);
+
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      const allLatihan = await getAllLatihan();
+
+      // Filter berdasarkan tingkat kesulitan
+      const levelMap: { [key: string]: string } = {
+        easy: "mudah",
+        medium: "sedang",
+        hard: "sulit",
+      };
+
+      let filteredQuestions = allLatihan.filter(
+        (q: Question) =>
+          q.tingkat_kesulitan === levelMap[level as string] ||
+          levelMap[level as string] === undefined
+      );
+
+      // *** Sanitizer → pastikan jawaban_benar full bilangan ***
+      filteredQuestions = filteredQuestions.map((q: Question) => ({
+        ...q,
+        jawaban_benar: Number(
+          String(q.jawaban_benar).replace(/[^0-9]/g, "") // hilangkan "-", "/", dsb.
+        ),
+      }));
+
+      setQuestions(filteredQuestions.length > 0 ? filteredQuestions : []);
+      setCurrentQuestion(0);
+      setSelectedAnswer(null);
+      setShowResult(false);
+    } catch (error: any) {
+      toast.error("Gagal memuat soal: " + (error.message || ""));
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const currentQuestions = questions[level as keyof typeof questions] || questions.easy;
+  const currentQuestions = questions;
   const question = currentQuestions[currentQuestion];
 
   const handleAnswer = (answer: number) => {
     setSelectedAnswer(answer);
     setShowResult(true);
-    
-    if (answer === question.answer) {
-      toast.success("Benar! Hebat! 🎉", {
+
+    if (answer === question.jawaban_benar) {
+      toast.success("Benar! Hebat!", {
         duration: 2000,
       });
     } else {
-      toast.error("Belum tepat, coba lagi! 💪", {
+      toast.error("Belum tepat, coba lagi!", {
         duration: 2000,
       });
     }
@@ -55,7 +91,7 @@ const Practice = () => {
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
-      toast.success("Kamu sudah menyelesaikan semua soal! 🌟", {
+      toast.success("Kamu sudah menyelesaikan semua soal!", {
         duration: 3000,
       });
       navigate("/levels");
@@ -64,21 +100,85 @@ const Practice = () => {
 
   const getLevelColor = () => {
     switch (level) {
-      case "easy": return "from-easy/30 to-easy/10";
-      case "medium": return "from-medium/30 to-medium/10";
-      case "hard": return "from-hard/30 to-hard/10";
-      default: return "from-easy/30 to-easy/10";
+      case "easy":
+        return "from-green-100/50 to-green-50/50";
+      case "medium":
+        return "from-yellow-100/50 to-yellow-50/50";
+      case "hard":
+        return "from-red-100/50 to-red-50/50";
+      default:
+        return "from-green-100/50 to-green-50/50";
     }
   };
 
   const getLevelName = () => {
     switch (level) {
-      case "easy": return "Mudah 🌟";
-      case "medium": return "Sedang ⭐";
-      case "hard": return "Sulit ✨";
-      default: return "Mudah 🌟";
+      case "easy":
+        return "Mudah";
+      case "medium":
+        return "Sedang";
+      case "hard":
+        return "Sulit";
+      default:
+        return "Mudah";
     }
   };
+
+  // Generate wrong answers (harus angka full & tidak negatif)
+  const generateWrongAnswers = (correctAnswer: number): number[] => {
+    const wrongAnswers: number[] = new Set<number>();
+
+    while (wrongAnswers.size < 3) {
+      const offset = Math.floor(Math.random() * 11) - 5; // -5 s/d +5
+      const wrong = correctAnswer + offset;
+
+      if (wrong > 0 && wrong !== correctAnswer) {
+        wrongAnswers.add(wrong);
+      }
+
+      if (wrongAnswers.size > 20) break;
+    }
+
+    return Array.from(wrongAnswers);
+  };
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen bg-gradient-to-b ${getLevelColor()} py-8`}>
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-2xl font-bold text-foreground">Memuat soal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className={`min-h-screen bg-gradient-to-b ${getLevelColor()} py-8`}>
+        <div className="container mx-auto px-4">
+          <Button
+            onClick={() => navigate("/levels")}
+            variant="outline"
+            size="lg"
+            className="mb-8 rounded-2xl border-2 text-xl font-bold"
+          >
+            <ArrowLeft className="mr-2 w-6 h-6" />
+            Kembali
+          </Button>
+          <div className="text-center">
+            <p className="text-2xl font-bold">Tidak ada soal untuk level ini</p>
+            <Button
+              onClick={() => navigate("/levels")}
+              size="lg"
+              className="mt-8 rounded-2xl font-bold"
+            >
+              Kembali ke Level
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen bg-gradient-to-b ${getLevelColor()} py-8`}>
@@ -102,51 +202,49 @@ const Practice = () => {
           </p>
         </div>
 
-        {/* Ocean theme decoration */}
         <div className="max-w-2xl mx-auto mb-8 rounded-3xl overflow-hidden shadow-[var(--shadow-card)] border-4 border-secondary/30">
-          <img 
-            src={oceanImage} 
-            alt="Hewan laut" 
-            className="w-full h-auto"
-          />
+          <img src={oceanImage} alt="Hewan laut" className="w-full h-auto" />
         </div>
 
-        {/* Question Card */}
         <div className="max-w-3xl mx-auto">
           <LearningCard className="bg-card/95 backdrop-blur-sm mb-8 min-h-[200px] flex items-center justify-center">
             <h2 className="text-4xl md:text-6xl font-black text-center text-foreground">
-              {question.question}
+              {question.pertanyaan}
             </h2>
           </LearningCard>
 
-          {/* Answer Options */}
           <div className="grid grid-cols-2 gap-6 mb-8">
-            {question.options.map((option) => (
-              <Button
-                key={option}
-                onClick={() => !showResult && handleAnswer(option)}
-                disabled={showResult}
-                size="lg"
-                className={`h-28 text-5xl font-black rounded-3xl transition-all duration-300 ${
-                  showResult && option === question.answer
-                    ? "bg-easy text-easy-foreground ring-4 ring-easy-foreground"
-                    : showResult && option === selectedAnswer
-                    ? "bg-hard text-hard-foreground"
-                    : "bg-card hover:scale-105"
-                }`}
-              >
-                {option}
-                {showResult && option === question.answer && (
-                  <CheckCircle className="ml-4 w-8 h-8" />
-                )}
-                {showResult && option === selectedAnswer && option !== question.answer && (
-                  <XCircle className="ml-4 w-8 h-8" />
-                )}
-              </Button>
-            ))}
+            {[
+              question.jawaban_benar,
+              ...generateWrongAnswers(question.jawaban_benar),
+            ]
+              .sort(() => Math.random() - 0.5)
+              .map((option) => (
+                <Button
+                  key={option}
+                  onClick={() => !showResult && handleAnswer(option)}
+                  disabled={showResult}
+                  size="lg"
+                  className={`h-28 text-5xl font-black rounded-3xl ${showResult && option === question.jawaban_benar
+                      ? "bg-green-500 text-white ring-4 ring-green-600"
+                      : showResult && option === selectedAnswer
+                        ? "bg-red-500 text-white"
+                        : ""
+                    }`}
+                >
+                  {option}
+                  {showResult && option === question.jawaban_benar && (
+                    <CheckCircle className="ml-4 w-8 h-8" />
+                  )}
+                  {showResult &&
+                    option === selectedAnswer &&
+                    option !== question.jawaban_benar && (
+                      <XCircle className="ml-4 w-8 h-8" />
+                    )}
+                </Button>
+              ))}
           </div>
 
-          {/* Next Button */}
           {showResult && (
             <div className="text-center">
               <Button
@@ -154,7 +252,10 @@ const Practice = () => {
                 size="lg"
                 className="text-2xl h-16 px-12 rounded-3xl font-black bg-gradient-to-r from-primary to-hero hover:scale-105 transition-all"
               >
-                {currentQuestion < currentQuestions.length - 1 ? "Soal Berikutnya" : "Selesai"} →
+                {currentQuestion < currentQuestions.length - 1
+                  ? "Soal Berikutnya"
+                  : "Selesai"}{" "}
+                →
               </Button>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LearningCard } from "@/components/LearningCard";
@@ -7,84 +7,106 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Edit, Trash2, BookOpen, LogOut } from "lucide-react";
 import { toast } from "sonner";
-import { logout } from "@/lib/api";
+import { logout, getAllLatihan, createLatihan, updateLatihan, deleteLatihan } from "@/lib/api";
 
 interface Question {
   id: number;
-  question: string;
-  answer: number;
-  options: number[];
-  level: string;
+  judul: string;
+  pertanyaan: string;
+  jawaban_benar: number;
+  tingkat_kesulitan: string;
 }
 
 const Teacher = () => {
   const navigate = useNavigate();
-  const [questions, setQuestions] = useState<Question[]>([
-    { id: 1, question: "3 + 2 = ?", answer: 5, options: [4, 5, 6, 7], level: "easy" },
-    { id: 2, question: "6 + 3 = ?", answer: 9, options: [7, 8, 9, 10], level: "medium" },
-  ]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    question: "",
-    answer: "",
-    level: "easy"
+    judul: "",
+    pertanyaan: "",
+    jawaban_benar: "",
+    tingkat_kesulitan: "mudah"
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch latihan dari API saat komponen mount
+  useEffect(() => {
+    fetchLatihan();
+  }, []);
+
+  const fetchLatihan = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllLatihan();
+      setQuestions(data);
+    } catch (error: any) {
+      toast.error("Gagal memuat latihan: " + (error.message || ""));
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.question || !formData.answer) {
+    if (!formData.judul || !formData.pertanyaan || !formData.jawaban_benar) {
       toast.error("Mohon lengkapi semua field!");
       return;
     }
 
-    const answer = parseInt(formData.answer);
-    const options = [
-      answer - 2,
-      answer - 1,
-      answer,
-      answer + 1
-    ].sort(() => Math.random() - 0.5);
-
-    if (editingId) {
-      setQuestions(questions.map(q => 
-        q.id === editingId 
-          ? { ...q, question: formData.question, answer, options, level: formData.level }
-          : q
-      ));
-      toast.success("Soal berhasil diupdate!");
-      setEditingId(null);
-    } else {
-      const newQuestion: Question = {
-        id: Date.now(),
-        question: formData.question,
-        answer,
-        options,
-        level: formData.level
+    try {
+      const payload = {
+        judul: formData.judul,
+        pertanyaan: formData.pertanyaan,
+        jawaban_benar: parseInt(formData.jawaban_benar),
+        tingkat_kesulitan: formData.tingkat_kesulitan,
       };
-      setQuestions([...questions, newQuestion]);
-      toast.success("Soal berhasil ditambahkan!");
+
+      if (editingId) {
+        await updateLatihan(editingId, payload);
+        toast.success("Soal berhasil diupdate!");
+      } else {
+        await createLatihan(payload);
+        toast.success("Soal berhasil ditambahkan!");
+      }
+
+      // Refresh list
+      await fetchLatihan();
+      setEditingId(null);
+    } catch (error: any) {
+      toast.error("Gagal menyimpan soal: " + (error.message || ""));
+      console.error(error);
+      return;
     }
 
-    setFormData({ question: "", answer: "", level: "easy" });
+    setFormData({ judul: "", pertanyaan: "", jawaban_benar: "", tingkat_kesulitan: "mudah" });
     setShowForm(false);
   };
 
   const handleEdit = (q: Question) => {
     setFormData({
-      question: q.question,
-      answer: q.answer.toString(),
-      level: q.level
+      judul: q.judul,
+      pertanyaan: q.pertanyaan,
+      jawaban_benar: q.jawaban_benar.toString(),
+      tingkat_kesulitan: q.tingkat_kesulitan
     });
     setEditingId(q.id);
     setShowForm(true);
   };
 
-  const handleDelete = (id: number) => {
-    setQuestions(questions.filter(q => q.id !== id));
-    toast.success("Soal berhasil dihapus!");
+  const handleDelete = async (id: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus soal ini?")) return;
+    
+    try {
+      await deleteLatihan(id);
+      toast.success("Soal berhasil dihapus!");
+      await fetchLatihan();
+    } catch (error: any) {
+      toast.error("Gagal menghapus soal: " + (error.message || ""));
+    }
   };
 
   const handleLogout = async () => {
@@ -113,12 +135,12 @@ const Teacher = () => {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => navigate("/admin")}
+              onClick={() => navigate("/materi")}
               variant="outline"
               size="lg"
               className="rounded-2xl border-2 text-xl font-bold"
             >
-              Ke Admin Panel
+              Kelola Materi
             </Button>
             <Button
               onClick={handleLogout}
@@ -134,7 +156,7 @@ const Teacher = () => {
 
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-7xl font-black mb-4 text-hero">
-            Dashboard Guru 👩‍🏫
+            Dashboard Guru
           </h1>
           <p className="text-2xl text-foreground/70 font-bold">
             Kelola soal latihan untuk siswa
@@ -146,7 +168,7 @@ const Teacher = () => {
             onClick={() => {
               setShowForm(!showForm);
               setEditingId(null);
-              setFormData({ question: "", answer: "", level: "easy" });
+              setFormData({ judul: "", pertanyaan: "", jawaban_benar: "", tingkat_kesulitan: "mudah" });
             }}
             size="lg"
             className="w-full md:w-auto text-xl h-14 px-8 rounded-2xl font-bold bg-gradient-to-r from-primary to-secondary hover:scale-105 transition-all"
@@ -163,10 +185,20 @@ const Teacher = () => {
             </h3>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
+                <Label className="text-lg font-bold">Judul Soal</Label>
+                <Input
+                  value={formData.judul}
+                  onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
+                  placeholder="Contoh: Soal Penjumlahan 1"
+                  className="mt-2 h-12 text-lg rounded-xl"
+                />
+              </div>
+
+              <div>
                 <Label className="text-lg font-bold">Pertanyaan</Label>
                 <Input
-                  value={formData.question}
-                  onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+                  value={formData.pertanyaan}
+                  onChange={(e) => setFormData({ ...formData, pertanyaan: e.target.value })}
                   placeholder="Contoh: 3 + 2 = ?"
                   className="mt-2 h-12 text-lg rounded-xl"
                 />
@@ -176,8 +208,8 @@ const Teacher = () => {
                 <Label className="text-lg font-bold">Jawaban (angka)</Label>
                 <Input
                   type="number"
-                  value={formData.answer}
-                  onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
+                  value={formData.jawaban_benar}
+                  onChange={(e) => setFormData({ ...formData, jawaban_benar: e.target.value })}
                   placeholder="Contoh: 5"
                   className="mt-2 h-12 text-lg rounded-xl"
                 />
@@ -185,14 +217,14 @@ const Teacher = () => {
 
               <div>
                 <Label className="text-lg font-bold">Level Kesulitan</Label>
-                <Select value={formData.level} onValueChange={(value) => setFormData({ ...formData, level: value })}>
+                <Select value={formData.tingkat_kesulitan} onValueChange={(value) => setFormData({ ...formData, tingkat_kesulitan: value })}>
                   <SelectTrigger className="mt-2 h-12 text-lg rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="easy">Mudah</SelectItem>
-                    <SelectItem value="medium">Sedang</SelectItem>
-                    <SelectItem value="hard">Sulit</SelectItem>
+                    <SelectItem value="mudah">Mudah</SelectItem>
+                    <SelectItem value="sedang">Sedang</SelectItem>
+                    <SelectItem value="sulit">Sulit</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -212,7 +244,7 @@ const Teacher = () => {
                   onClick={() => {
                     setShowForm(false);
                     setEditingId(null);
-                    setFormData({ question: "", answer: "", level: "easy" });
+                    setFormData({ judul: "", pertanyaan: "", jawaban_benar: "", tingkat_kesulitan: "mudah" });
                   }}
                   className="flex-1 h-12 text-lg rounded-xl font-bold"
                 >
@@ -228,27 +260,34 @@ const Teacher = () => {
             <BookOpen className="w-8 h-8" />
             Daftar Soal ({questions.length})
           </h2>
+
+          {loading && (
+            <LearningCard className="bg-card/95 text-center py-8">
+              <p className="text-2xl font-bold text-foreground">Memuat soal...</p>
+            </LearningCard>
+          )}
           
-          {questions.map((q) => (
+          {!loading && questions.map((q) => (
             <LearningCard key={q.id} className="bg-card/95">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <span className={`px-4 py-1 rounded-full text-sm font-bold ${
-                      q.level === "easy" ? "bg-easy text-easy-foreground" :
-                      q.level === "medium" ? "bg-medium text-medium-foreground" :
-                      "bg-hard text-hard-foreground"
+                      q.tingkat_kesulitan === "mudah" ? "bg-green-100 text-green-700" :
+                      q.tingkat_kesulitan === "sedang" ? "bg-yellow-100 text-yellow-700" :
+                      "bg-red-100 text-red-700"
                     }`}>
-                      {q.level === "easy" ? "Mudah" : q.level === "medium" ? "Sedang" : "Sulit"}
+                      {q.tingkat_kesulitan.charAt(0).toUpperCase() + q.tingkat_kesulitan.slice(1)}
                     </span>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{q.question}</p>
+                  <p className="text-xl font-bold text-foreground mb-2">{q.judul}</p>
+                  <p className="text-2xl font-bold text-foreground">{q.pertanyaan}</p>
                   <p className="text-lg text-muted-foreground mt-2">
-                    Jawaban: <span className="font-bold text-foreground">{q.answer}</span>
+                    Jawaban: <span className="font-bold text-foreground">{q.jawaban_benar}</span>
                   </p>
                 </div>
                 
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-shrink-0">
                   <Button
                     onClick={() => handleEdit(q)}
                     variant="outline"
@@ -271,6 +310,13 @@ const Teacher = () => {
               </div>
             </LearningCard>
           ))}
+
+          {!loading && questions.length === 0 && (
+            <LearningCard className="bg-card/95 text-center py-12">
+              <p className="text-2xl font-bold text-foreground">Belum ada soal</p>
+              <p className="text-lg text-foreground/70 mt-2">Tambahkan soal baru untuk memulai</p>
+            </LearningCard>
+          )}
         </div>
       </div>
     </div>

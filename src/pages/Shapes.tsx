@@ -36,14 +36,14 @@ const Shapes = () => {
           </p>
         </div>
 
-        {/* Jungle animals decoration */}
+        {/* Jungle animals decoration
         <div className="max-w-3xl mx-auto mb-8 rounded-3xl overflow-hidden shadow-[var(--shadow-card)] border-6 border-accent/30">
           <img 
             src={jungleImage} 
             alt="Hewan hutan" 
             className="w-full h-auto"
           />
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
           {shapes.map((shape) => (

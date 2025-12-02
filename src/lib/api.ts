@@ -46,6 +46,13 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
 // API Functions
 
 // Auth
+export const register = async (nama: string, email: string, password: string, role?: string) => {
+  return apiRequest('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ nama, email, password, role }),
+  });
+};
+
 export const login = async (email: string, password: string) => {
   return apiRequest('/auth/login', {
     method: 'POST',
@@ -147,5 +154,34 @@ export const createAktivitas = async (data: { jenis_aktivitas: string; deskripsi
   return apiRequest('/aktivitas', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+};
+
+// Users (Admin only)
+export const getAllUsers = async () => {
+  return apiRequest('/users');
+};
+
+export const getUserById = async (id: number) => {
+  return apiRequest(`/users/${id}`);
+};
+
+export const createUser = async (data: { nama: string; email: string; password: string; role: string }) => {
+  return apiRequest('/users', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateUser = async (id: number, data: { nama: string; email: string; role: string; password?: string }) => {
+  return apiRequest(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteUser = async (id: number) => {
+  return apiRequest(`/users/${id}`, {
+    method: 'DELETE',
   });
 };

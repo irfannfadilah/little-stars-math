@@ -10,19 +10,16 @@ const Levels = () => {
     {
       name: "Mudah",
       color: "bg-easy hover:bg-easy/80",
-      icon: "🌟",
       path: "/practice/easy"
     },
     {
       name: "Sedang",
       color: "bg-medium hover:bg-medium/80",
-      icon: "⭐",
       path: "/practice/medium"
     },
     {
       name: "Sulit",
       color: "bg-hard hover:bg-hard/80",
-      icon: "✨",
       path: "/practice/hard"
     }
   ];
@@ -42,7 +39,7 @@ const Levels = () => {
 
         <div className="text-center mb-16">
           <h1 className="text-6xl md:text-8xl font-black mb-4 bg-gradient-to-r from-easy via-medium to-hard bg-clip-text text-transparent">
-            Latihan Soal! 📚
+            Latihan Soal!
           </h1>
           <p className="text-3xl text-foreground/70 font-bold">
             Pilih tingkat kesulitan
@@ -56,18 +53,10 @@ const Levels = () => {
               onClick={() => navigate(level.path)}
               className={`min-h-[280px] flex flex-col items-center justify-center gap-6 ${level.color} transition-all duration-300`}
             >
-              <div className="text-8xl">{level.icon}</div>
               <h2 className="text-4xl font-black text-foreground">{level.name}</h2>
               <Star className="w-12 h-12 text-foreground/50" />
             </LearningCard>
           ))}
-        </div>
-
-        {/* Decorative elements */}
-        <div className="mt-16 flex justify-center gap-8 text-5xl animate-bounce">
-          <span>📖</span>
-          <span>✏️</span>
-          <span>🎯</span>
         </div>
       </div>
     </div>

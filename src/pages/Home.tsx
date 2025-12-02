@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import UserBadge from "@/components/UserBadge";
 import heroImage from "@/assets/hero-kids-learning.jpg";
 import { Sparkles, BookOpen, GraduationCap } from "lucide-react";
 
@@ -8,6 +9,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary via-background to-accent/30">
+      <UserBadge />
       {/* Decorative elements */}
       <div className="fixed top-10 left-10 animate-bounce">
         <Sparkles className="w-12 h-12 text-primary" />
@@ -23,10 +25,10 @@ const Home = () => {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-6xl md:text-8xl font-black mb-6 bg-gradient-to-r from-primary via-hero to-secondary bg-clip-text text-transparent animate-pulse">
-            Aplikasi Numerasi! 🎉
+            NINA 🎉
           </h1>
           <p className="text-2xl md:text-3xl text-foreground/80 font-bold mb-8">
-            Belajar Angka dan Bentuk dengan Cara Seru!
+           Numerasi Interaktif Anak
           </p>
         </div>
 
@@ -51,22 +53,24 @@ const Home = () => {
           </Button>
 
           <Button
+            onClick={() => navigate("/materi-siswa")}
+            size="lg"
+            variant="outline"
+            className="w-full h-20 text-3xl font-black rounded-3xl border-4 hover:scale-105 transition-all duration-300 shadow-[var(--shadow-soft)] bg-card"
+          >
+            <BookOpen className="mr-4 w-10 h-10" />
+            Baca Materi
+          </Button>
+
+          <Button
             onClick={() => navigate("/login")}
             size="lg"
             variant="outline"
             className="w-full h-20 text-3xl font-black rounded-3xl border-4 hover:scale-105 transition-all duration-300 shadow-[var(--shadow-soft)] bg-card"
           >
             <GraduationCap className="mr-4 w-10 h-10" />
-            🔐 Login Guru/Admin
+            Login
           </Button>
-        </div>
-
-        {/* Fun decorations at bottom */}
-        <div className="mt-16 flex justify-center gap-8 text-6xl animate-bounce">
-          <span>🎨</span>
-          <span>📚</span>
-          <span>✨</span>
-          <span>🌟</span>
         </div>
       </div>
     </div>
